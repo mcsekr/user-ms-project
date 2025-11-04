@@ -9,12 +9,14 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                echo 'Checking out source code'
                 checkout scm
             }
         }
         
         stage('Build') {
             steps {
+                echo 'Building application'
                 dir('User-Api-GW') {
                     sh 'mvn clean compile'
                 }
@@ -23,6 +25,7 @@ pipeline {
         
         stage('Test') {
             steps {
+                echo 'Running tests'
                 dir('User-Api-GW') {
                     sh 'mvn test'
                 }
@@ -31,6 +34,7 @@ pipeline {
         
         stage('Package') {
             steps {
+                echo 'Packaging application'
                 dir('User-Api-GW') {
                     sh 'mvn package -DskipTests'
                 }
