@@ -38,6 +38,11 @@ pipeline {
         }
         
         stage('Docker Build') {
+            when {
+                expression { 
+                    return sh(script: 'which docker', returnStatus: true) == 0
+                }
+            }
             steps {
                 dir('User-Api-GW') {
                     sh 'docker build -t user-api-gw:${BUILD_NUMBER} .'
@@ -47,6 +52,11 @@ pipeline {
         }
         
         stage('Deploy') {
+            when {
+                expression { 
+                    return sh(script: 'which docker-compose', returnStatus: true) == 0
+                }
+            }
             steps {
                 dir('User-Api-GW') {
                     sh 'docker-compose down || true'
