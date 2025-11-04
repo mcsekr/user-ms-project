@@ -40,7 +40,7 @@ pipeline {
         stage('Docker Build') {
             when {
                 expression { 
-                    return sh(script: 'which docker', returnStatus: true) == 0
+                    sh(script: 'which docker', returnStatus: true) == 0
                 }
             }
             steps {
@@ -54,7 +54,7 @@ pipeline {
         stage('Deploy') {
             when {
                 expression { 
-                    return sh(script: 'which docker-compose', returnStatus: true) == 0
+                    sh(script: 'which docker-compose', returnStatus: true) == 0
                 }
             }
             steps {
