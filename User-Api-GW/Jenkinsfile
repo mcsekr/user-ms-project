@@ -38,29 +38,31 @@ pipeline {
         }
         
         stage('Docker Build') {
-            when {
-                expression { 
-                    sh(script: 'which docker', returnStatus: true) == 0
-                }
-            }
             steps {
                 dir('User-Api-GW') {
-                    sh 'docker build -t user-api-gw:${BUILD_NUMBER} .'
-                    sh 'docker tag user-api-gw:${BUILD_NUMBER} user-api-gw:latest'
+                    script {
+                        if (sh(script: 'which docker', returnStatus: true) == 0) {
+                            sh 'docker build -t user-api-gw:${BUILD_NUMBER} .'
+                            sh 'docker tag user-api-gw:${BUILD_NUMBER} user-api-gw:latest'
+                        } else {
+                            echo 'Docker not available, skipping Docker build'
+                        }
+                    }
                 }
             }
         }
         
         stage('Deploy') {
-            when {
-                expression { 
-                    sh(script: 'which docker-compose', returnStatus: true) == 0
-                }
-            }
             steps {
                 dir('User-Api-GW') {
-                    sh 'docker-compose down || true'
-                    sh 'docker-compose up -d'
+                    script {
+                        if (sh(script: 'which docker-compose', returnStatus: true) == 0) {
+                            sh 'docker-compose down || true'
+                            sh 'docker-compose up -d'
+                        } else {
+                            echo 'Docker Compose not available, skipping deployment'
+                        }
+                    }
                 }
             }
         }
