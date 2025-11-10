@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=userdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+
+  eureka:
+    build: ./user-discovery-service
+    ports:
+      - "8761:8761"
+
+  user-api-gw:
+    build: ./User-Api-GW
+    ports:
+      - "8081:8080"
+    environment:
+      - EUREKA_URL=http://eureka:8761/eureka
+    depends_on:
+      - eureka
+
+  user-login:
+    build: ./user-login
+    ports:
+      - "9094:9094"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
+
+  user-registration:
+    build: ./user-registration
+    ports:
+      - "9093:9093"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
+      - eureka
+
+  user-read-all-records:
+    build: ./user-read-all-records
+    ports:
+      - "9092:9092"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
+      - eureka
+
+  user-read-single-record:
+    build: ./user-read-single-record
+    ports:
+      - "9091:9091"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
+      - eureka
+
+  user-update:
+    build: ./user-update
+    ports:
+      - "9095:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      - postgres
