@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  user-read-single-record:
+    build: .
+    ports:
+      - "9091:9091"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka:8761/eureka
+    depends_on:
+      - postgres
+      - eureka
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=userdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+
+  eureka:
+    image: user-discovery-service
+    ports:
+      - "8761:8761"

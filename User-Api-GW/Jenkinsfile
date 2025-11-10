@@ -44,10 +44,8 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('User-Api-GW') {
-                    script {
-                        def image = docker.build("user-api-gw:${BUILD_NUMBER}")
-                        image.tag("latest")
-                    }
+                    sh 'docker build -t user-api-gw:${BUILD_NUMBER} .'
+                    sh 'docker tag user-api-gw:${BUILD_NUMBER} user-api-gw:latest'
                 }
             }
         }
