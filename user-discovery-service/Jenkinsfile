@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+    
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-17'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code'
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo 'Building application'
+                dir('user-discovery-service') {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo 'Running tests'
+                dir('user-discovery-service') {
+                    sh 'mvn test'
+                }
+            }
+        }
+        
+        stage('Package') {
+            steps {
+                echo 'Packaging application'
+                dir('user-discovery-service') {
+                    sh 'mvn package -DskipTests'
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                dir('user-discovery-service') {
+                    sh 'docker build -t user-discovery-service:${BUILD_NUMBER} .'
+                    sh 'docker tag user-discovery-service:${BUILD_NUMBER} user-discovery-service:latest'
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                dir('user-discovery-service') {
+                    sh 'docker-compose down || true'
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}

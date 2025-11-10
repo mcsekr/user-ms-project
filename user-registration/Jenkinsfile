@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+    
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-17'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code'
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo 'Building application'
+                dir('user-registration') {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo 'Running tests'
+                dir('user-registration') {
+                    sh 'mvn test'
+                }
+            }
+        }
+        
+        stage('Package') {
+            steps {
+                echo 'Packaging application'
+                dir('user-registration') {
+                    sh 'mvn package -DskipTests'
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                dir('user-registration') {
+                    sh 'docker build -t user-registration:${BUILD_NUMBER} .'
+                    sh 'docker tag user-registration:${BUILD_NUMBER} user-registration:latest'
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                dir('user-registration') {
+                    sh 'docker-compose down || true'
+                    sh 'docker-compose up -d'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
