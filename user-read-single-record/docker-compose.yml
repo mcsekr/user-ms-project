@@ -6,22 +6,19 @@ services:
     ports:
       - "9091:9091"
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_PROFILES_ACTIVE=oracle
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka:8761/eureka
-    depends_on:
-      - postgres
-      - eureka
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/XE
+      - SPRING_DATASOURCE_USERNAME=developer
+      - SPRING_DATASOURCE_PASSWORD=Passw0rd
+    networks:
+      - user-network
 
-  postgres:
-    image: postgres:15
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=userdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-
-  eureka:
-    image: user-discovery-service
-    ports:
-      - "8761:8761"
+networks:
+  user-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1

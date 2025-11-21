@@ -14,7 +14,7 @@ import in.co.practice.ms.registration.exceptions.DuplicateEmployeePresent;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(exception = { DuplicateEmployeePresent.class })
+	@ExceptionHandler({ DuplicateEmployeePresent.class })
 	@ResponseStatus(code = HttpStatus.BAD_REQUEST)
 	public ResponseEntity<Object> handleBadRequests(Exception e) {
 		Map<String, String> error = new HashMap<String, String>();

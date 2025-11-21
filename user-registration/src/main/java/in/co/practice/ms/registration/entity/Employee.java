@@ -11,13 +11,13 @@ import jakarta.persistence.Table;
 @Table(name = "EMPLOYEES")
 public class Employee {
 	@Id
-	@Column(name = "EMP_ID")
+	@Column(name = "EMP_ID", nullable = false)
 	private int id;
-	@Column(name = "EMP_NAME")
+	@Column(name = "EMP_NAME", length = 100, nullable = false)
 	private String name;
-	@Column(name = "EMP_AGE")
+	@Column(name = "EMP_AGE", nullable = false)
 	private int age;
-	@Column(name = "EMP_QUAL")
+	@Column(name = "EMP_QUAL", length = 200)
 	private String qualification;
 
 	public Employee() {

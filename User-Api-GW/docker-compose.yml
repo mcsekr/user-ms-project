@@ -7,18 +7,14 @@ services:
       - "8080:8080"
     environment:
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka:8761/eureka
-    depends_on:
-      - eureka
     networks:
-      - microservices
-
-  eureka:
-    image: steeltoeoss/eureka-server
-    ports:
-      - "8761:8761"
-    networks:
-      - microservices
+      - user-network
 
 networks:
-  microservices:
+  user-network:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1

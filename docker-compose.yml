@@ -9,11 +9,33 @@ services:
       - POSTGRES_DB=userdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
+    networks:
+      - user-network
+
+  oracle:
+    image: gvenzl/oracle-xe:21-slim
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      - ORACLE_PASSWORD=oracle
+      - ORACLE_ALLOW_REMOTE=true
+    volumes:
+      - oracledb_data:/opt/oracle/oradata
+    networks:
+      - user-network
 
   eureka:
     build: ./user-discovery-service
     ports:
       - "8761:8761"
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
 
   user-api-gw:
     build: ./User-Api-GW
@@ -23,69 +45,203 @@ services:
       - EUREKA_URL=http://eureka:8761/eureka
     depends_on:
       - eureka
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
 
   user-login:
     build: ./user-login
     ports:
       - "9094:9094"
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_PROFILES_ACTIVE=oracle
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/XE
+      - SPRING_DATASOURCE_USERNAME=developer
+      - SPRING_DATASOURCE_PASSWORD=Passw0rd
     depends_on:
-      - postgres
+      - oracle
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
 
   user-registration:
     build: ./user-registration
     ports:
       - "9093:9093"
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_PROFILES_ACTIVE=oracle
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/XE
+      - SPRING_DATASOURCE_USERNAME=developer
+      - SPRING_DATASOURCE_PASSWORD=Passw0rd
     depends_on:
-      - postgres
+      - oracle
       - eureka
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
 
   user-read-all-records:
     build: ./user-read-all-records
     ports:
       - "9092:9092"
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_PROFILES_ACTIVE=oracle
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/XE
+      - SPRING_DATASOURCE_USERNAME=developer
+      - SPRING_DATASOURCE_PASSWORD=Passw0rd
     depends_on:
-      - postgres
+      - oracle
       - eureka
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
 
   user-read-single-record:
     build: ./user-read-single-record
     ports:
       - "9091:9091"
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
+      - SPRING_PROFILES_ACTIVE=oracle
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/XE
+      - SPRING_DATASOURCE_USERNAME=developer
+      - SPRING_DATASOURCE_PASSWORD=Passw0rd
     depends_on:
-      - postgres
+      - oracle
       - eureka
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
 
   user-update:
     build: ./user-update
     ports:
       - "9095:9090"
     environment:
-      - SPRING_PROFILES_ACTIVE=postgres
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/userdb
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_PROFILES_ACTIVE=oracle
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@//oracle:1521/XE
+      - SPRING_DATASOURCE_USERNAME=developer
+      - SPRING_DATASOURCE_PASSWORD=Passw0rd
+    depends_on:
+      - oracle
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://host.docker.internal:12201"
+        tag: "{{.Name}}"
+    networks:
+      - user-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.14
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - user-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.14
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - user-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.14
+    depends_on:
+      - elasticsearch
+    ports:
+      - "12201:12201/udp"
+      - "5000:5000"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    networks:
+      - user-network
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    container_name: jenkins
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # Allows Jenkins to interact with Docker daemon on the host
+    restart: unless-stopped
+    networks:
+      - user-network
+
+  sonarqube:
+    image: sonarqube:lts-community
     depends_on:
       - postgres
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://postgres:5432/userdb
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    ports:
+      - "9090:9000"
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    restart: unless-stopped
+    networks:
+      - user-network
+
+volumes:
+  jenkins_home:
+  sonarqube_conf:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  esdata:
+    driver: local
+  oracledb_data:
+    driver: local
+
+networks:
+  user-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1

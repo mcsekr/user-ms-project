@@ -6,14 +6,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.4</version>
+		<version>3.3.6</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>in.co.practice.ms.registration</groupId>
-	<artifactId>user-registration</artifactId>
+	<groupId>in.co.practice.ms.update</groupId>
+	<artifactId>user-update</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>User Registration</name>
-	<description>Micro service User registration module</description>
+	<name>User update</name>
+	<description>Micro service User update module</description>
 	<url />
 	<licenses>
 		<license />

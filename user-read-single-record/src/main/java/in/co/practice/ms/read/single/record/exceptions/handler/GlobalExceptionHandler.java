@@ -14,7 +14,7 @@ import in.co.practice.ms.read.single.record.exceptions.NoEmployeePresentExceptio
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(exception = { NoEmployeePresentException.class })
+	@ExceptionHandler({ NoEmployeePresentException.class })
 	@ResponseStatus(code = HttpStatus.BAD_REQUEST)
 	public ResponseEntity<Object> handleBadRequests(Exception e) {
 		Map<String, String> error = new HashMap<String, String>();
